@@ -1,6 +1,6 @@
 # AD description password finder
 
-The purpose of this tool is to check if passwords are stored in clear text in the desciption of Active Directory accounts.
+The purpose of this tool is to check if passwords are stored in clear text in the description of Active Directory accounts.
 
 The requirements are :
   - Active Directory Module installed on the machine executing "get_description.py"
