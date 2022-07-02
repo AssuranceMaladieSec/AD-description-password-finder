@@ -24,7 +24,7 @@ Extract the hashes of your ntds file using [secretdump.py](https://github.com/Se
 
 **The result must be put in the `ntds` directory with the name `output.ntds`**
 
-*the secretdump code in charge of ntds hashes extraction will be integrated in check_description.py (some day...)*
+*the secretdump code in charge of ntds hashes extraction will be integrated in check_description.py soon!*
 
 <p align="center">
 <img src="https://github.com/AssuranceMaladieSec/AD-description-password-finder/blob/main/pics/convert_ntds.png" width="60%" height="60%">  
