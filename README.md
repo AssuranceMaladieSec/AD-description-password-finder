@@ -24,6 +24,7 @@ You successfully dumped the ntds.dit and SYSTEM hive and while cracking the hash
 ## Install
 Install the requirements
 ~~~
+$ git clone https://github.com/AssuranceMaladieSec/AD-description-password-finder.git
 $ pip3 install -r requirements.txt
 ~~~
 
