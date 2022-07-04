@@ -14,7 +14,7 @@ You want to check if password are stored in the description field of Active Dire
 
 ### Internal Pentest/Red Team
 
-You successfully dumped the ntds.dit and SYSTEM hive and while cracking the hashes, you want to check if some plain text passwords are available in the description field of Active Directory accounts.
+Post-exploitation: You successfully dumped the ntds.dit and SYSTEM hive and while cracking the hashes, you want to check if some plain text passwords are available in the description field of Active Directory accounts.
 
 ## Requirements
 - Python 3
