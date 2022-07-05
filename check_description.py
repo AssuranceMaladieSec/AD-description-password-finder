@@ -17,6 +17,8 @@ import json
 from datetime import datetime
 import argparse
 import logging
+import hashlib
+import json
 from impacket.examples import logger
 from impacket.examples.secretsdump import LocalOperations, NTDSHashes
 
@@ -70,7 +72,7 @@ class DumpSecrets:
                                             outputFileName=self.__outputFileName, justUser=self.__justUser,
                                             printUserStatus= self.__printUserStatus)
             try:
-                self.__NTDSHashes.dump()
+                description_ntds = self.__NTDSHashes.dump()
             except Exception as e:
                 if logging.getLogger().level == logging.DEBUG:
                     import traceback
@@ -78,6 +80,7 @@ class DumpSecrets:
                 logging.error(e)
 
             self.cleanup()
+            return description_ntds
 
         except (Exception, KeyboardInterrupt) as e:
             if logging.getLogger().level == logging.DEBUG:
@@ -90,7 +93,7 @@ class DumpSecrets:
                 pass
 
     def cleanup(self):
-        logging.info('Cleaning up... ')
+        #logging.info('Cleaning up... ')
         if self.__NTDSHashes:
             self.__NTDSHashes.finish()
 
@@ -101,9 +104,9 @@ def search_pass(ntds, hashes, plain, filename):
     processed = len(hashes)
     found = 0
     
-    print("\nWe have %s hashes of user with description to process" % processed)
+    print("\nWe have %s user's descriptions to analyze" % processed)
     # for each entry from csv file
-    with open(filename, mode='a',encoding='utf8') as f:
+    with open(filename, mode='w',encoding='utf8') as f:
         for entry in hashes:
         # if entry in ntds and hash NT of the entry match a description hash
             try:
@@ -140,12 +143,43 @@ def load_ntds(filename):
                 
     return dict_from_ntds
 
+def nt_hash(string):
+    hash = hashlib.new('md4', string.encode('utf-16le')).hexdigest()
+    return hash
+    
+def hashes_desc(dic_csv):
+    dict_hashes_desc = {}
+    dict_plain_desc = {}
+    
+    #For each user 
+    for elem in dic_csv:
+        #split the description in substring (separator is space)
+        sub_str = dic_csv[elem].split()
+        #retrieve the whole description too
+        desc = dic_csv[elem]
+        #convert into NT hash the whole description and put it at first element of the user entry in the new dico
+        dict_hashes_desc[elem] = [nt_hash(desc)]
+        #Equivalent operation but in plain text in plain dico
+        dict_plain_desc[elem] = [desc]
+        
+        #For each sub string in the description
+        for item in sub_str:
+            #convert in NT hash the substring and add it in the list for the user entry in the hash dico
+            dict_hashes_desc[elem].append(nt_hash(item))
+            #same thing but plain text
+            dict_plain_desc[elem].append(item)
+    return dict_hashes_desc, dict_plain_desc
+  
+def write_dico_json(dico, filename):
+    f = open(filename, "w")
+    json.dump(dico, f)
+    f.close()
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(add_help = True)
-    parser.add_argument('-extract', action='store_true', help='extract hashes from NTDS')
-    parser.add_argument('-system', action='store', help='SYSTEM hive to parse. MANDATORY if -extract is used')
-    parser.add_argument('-ntds', action='store', help='NTDS.DIT file to parse. MANDATORY if -extract is used')
+    parser.add_argument('-system', action='store', help='SYSTEM hive to parse. MANDATORY')
+    parser.add_argument('-ntds', action='store', help='NTDS.DIT file to parse. MANDATORY')
     parser.add_argument('-ts', action='store_true', help='Adds timestamp to every logging output during hashes extraction')
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON during hashes extraction')
     options = parser.parse_args()
@@ -157,24 +191,26 @@ if __name__ == '__main__':
     else:
         logging.getLogger().setLevel(logging.INFO)
 
-    if (options.extract):
-        if (options.ntds == None) or (options.system == None):
-            print("\nTo use -extract parameters -ntds and -system are mandatory!\n")
-            exit(1)
-        else:
-            dumper = DumpSecrets(options)
-            try:
-                dumper.dump()
-            except Exception as e:
-                if logging.getLogger().level == logging.DEBUG:
-                    import traceback
-                    traceback.print_exc()
-                logging.error(e)
-    elif (options.ntds != None) or (options.system != None):
-        print("\nYou cannot use -ntds and -system parameters without -extract!\n")
-        exit(1)
 
-    print("\nStarting the Check Description Script")
+    if (options.ntds == None) or (options.system == None):
+        print("\nParameters -ntds and -system are mandatory!\n")
+        exit(1)
+    else:
+        dumper = DumpSecrets(options)
+        try:
+            print("\nExtracting hash and descriptions in the ntds\n")
+            description_ntds = dumper.dump()
+        except Exception as e:
+            if logging.getLogger().level == logging.DEBUG:
+                import traceback
+                traceback.print_exc()
+            logging.error(e)
+
+    print("\nCreating hash file in './output/description_hashes.json' and plain text file in './output/description_plain.json'")
+    dict_hashes, dict_plain = hashes_desc(description_ntds)
+    write_dico_json(dict_hashes, "./output/description_hashes.json")
+    write_dico_json(dict_plain, "./output/description_plain.json")
+    print("\nDone!")
 
     print("\nLoading ./output/description_hashes.json")
     if not path.exists("./output/description_hashes.json"):
@@ -203,4 +239,6 @@ if __name__ == '__main__':
     print("\nDone! We found %s password in the accounts description" % pass_found)
     if (pass_found > 0):
         print("\nYou can find the results in the file %s" % filename)
+    else:
+        print("\nNo plain text password found in accounts descriptions")
     print("\nThat's all folks!")
