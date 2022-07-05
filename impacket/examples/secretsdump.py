@@ -827,6 +827,7 @@ class NTDSHashes:
         keysOutputFile = None
         clearTextOutputFile = None
         map_description = {}
+        list_description_disabled = []
 
 
         try:
@@ -884,6 +885,10 @@ class NTDSHashes:
                                     # Check if not machine account
                                     if (record[self.NAME_TO_INTERNAL['sAMAccountName']][-1] != "$"):
                                         map_description[record[self.NAME_TO_INTERNAL['sAMAccountName']].lower()] = record[self.NAME_TO_INTERNAL['Description']]
+                                        if record[self.NAME_TO_INTERNAL['userAccountControl']] is not None:
+                                            if '{0:08b}'.format(record[self.NAME_TO_INTERNAL['userAccountControl']])[-2:-1] == '1':
+                                                # add the account to the list of disabled account with description
+                                                list_description_disabled.append(record[self.NAME_TO_INTERNAL['sAMAccountName']].lower())
                                 if self.__justNTLM is False:
                                     self.__decryptSupplementalInfo(record, None, keysOutputFile, clearTextOutputFile)
                         except Exception as e:
@@ -1033,7 +1038,7 @@ class NTDSHashes:
 
             if clearTextOutputFile is not None:
                 clearTextOutputFile.close()   
-        return map_description
+        return map_description, list_description_disabled
 
 
 
