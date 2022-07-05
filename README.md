@@ -3,7 +3,6 @@
 The purpose of this tool is to check if passwords are stored in clear text in the description of Active Directory accounts.
 
 The requirements are :
-  - Active Directory Module installed on the machine executing "get_description.py"
   - having a copy of the ntds.dit and SYSTEM hive
   
  If you don't have python, you can use the .exe version of the scripts in the binary folder of this repository.
@@ -69,6 +68,12 @@ You can find the results in the file ./results/2022-07-05_11h45_results.txt
 That's all folks!
 ```
 
+## File results example
+
+```
+Disabled user - password for the user test-alice2 is in the description: Achanger6Achanger6!
+Enabled (probably) user - The password for the user test-alice is in the description: Achanger1Achanger2!
+```
 ## Use of impacket
 
 This tool uses a modify version of the [`secretdump`](https://github.com/SecureAuthCorp/impacket/blob/master/impacket/examples/secretsdump.py) code from the [Impacket](https://github.com/SecureAuthCorp/impacket) library to retrieve information from the ntds.
