@@ -100,7 +100,7 @@ class DumpSecrets:
 date = datetime.date(datetime.now())
 filename = f"./results/{date}_{datetime.now().hour}h{datetime.now().minute}_results.txt"
     
-def search_pass(ntds, hashes, plain, filename):
+def search_pass(ntds, hashes, plain, filename, list_disabled):
     processed = len(hashes)
     found = 0
     
@@ -113,7 +113,10 @@ def search_pass(ntds, hashes, plain, filename):
                 if (ntds[entry] in hashes[entry]):
                     # Get the index to retrieve the plain text
                     index = hashes[entry].index(ntds[entry])
-                    f.write(f"The password for the user {entry} is in the description: {plain[entry][index]}\n")
+                    if entry in list_disabled:
+                        f.write(f"Disabled user - password for the user {entry} is in the description: {plain[entry][index]}\n")
+                    else:
+                        f.write(f"Enabled (probably) user - The password for the user {entry} is in the description: {plain[entry][index]}\n")
                     found += 1
             except:
                 continue
@@ -199,7 +202,7 @@ if __name__ == '__main__':
         dumper = DumpSecrets(options)
         try:
             print("\nExtracting hash and descriptions in the ntds\n")
-            description_ntds = dumper.dump()
+            description_ntds, list_description_disabled = dumper.dump()
         except Exception as e:
             if logging.getLogger().level == logging.DEBUG:
                 import traceback
@@ -234,7 +237,7 @@ if __name__ == '__main__':
     else:
         dict_ntds = load_ntds("./ntds/output.ntds")
     
-    pass_found = search_pass(dict_ntds, dict_hashes, dict_plain, filename)
+    pass_found = search_pass(dict_ntds, dict_hashes, dict_plain, filename, list_description_disabled)
 
     print("\nDone! We found %s password in the accounts description" % pass_found)
     if (pass_found > 0):
