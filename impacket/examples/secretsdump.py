@@ -206,6 +206,7 @@ class NTDSHashes:
         NTDS_CLEARTEXT = 1
         NTDS_KERBEROS = 2
 
+    #Description field added
     NAME_TO_INTERNAL = {
         'uSNCreated':b'ATTq131091',
         'uSNChanged':b'ATTq131192',
@@ -227,8 +228,10 @@ class NTDSHashes:
         'pekList':b'ATTk590689',
         'supplementalCredentials':b'ATTk589949',
         'pwdLastSet':b'ATTq589920',
+        'Description':b'ATTm13',
     }
 
+    # Attribute type for Description added
     NAME_TO_ATTRTYP = {
         'userPrincipalName': 0x90290,
         'sAMAccountName': 0x900DD,
@@ -239,6 +242,7 @@ class NTDSHashes:
         'supplementalCredentials': 0x9007D,
         'objectSid': 0x90092,
         'userAccountControl':0x90008,
+        'Description': 0x900DD,
     }
 
     ATTRTYP_TO_ATTID = {
@@ -360,8 +364,10 @@ class NTDSHashes:
             self.NAME_TO_INTERNAL['userAccountControl'] : 1,
             self.NAME_TO_INTERNAL['supplementalCredentials'] : 1,
             self.NAME_TO_INTERNAL['pekList'] : 1,
+            self.NAME_TO_INTERNAL['Description'] : 1,
 
         }
+
 
 
     def __getPek(self):
@@ -643,7 +649,8 @@ class NTDSHashes:
             if self.__printUserStatus is True:
                 answer = "%s (status=%s)" % (answer, userAccountStatus)
 
-            self.__perSecretCallback(NTDSHashes.SECRET_TYPE.NTDS, answer)
+            # Print hashes and user in cmd
+            #self.__perSecretCallback(NTDSHashes.SECRET_TYPE.NTDS, answer)
 
             if outputFile is not None:
                 self.__writeOutput(outputFile, answer + '\n')
@@ -819,6 +826,7 @@ class NTDSHashes:
         hashesOutputFile = None
         keysOutputFile = None
         clearTextOutputFile = None
+        map_description = {}
 
 
         try:
@@ -871,6 +879,11 @@ class NTDSHashes:
                         try:
                             if record[self.NAME_TO_INTERNAL['sAMAccountType']] in self.ACCOUNT_TYPES:
                                 self.__decryptHash(record, outputFile=hashesOutputFile)
+                                # If there is a description in the accoutn Add sAMAccountName and Description to the map
+                                if (record[self.NAME_TO_INTERNAL['Description']] is not None):
+                                    # Check if not machine account
+                                    if (record[self.NAME_TO_INTERNAL['sAMAccountName']][-1] != "$"):
+                                        map_description[record[self.NAME_TO_INTERNAL['sAMAccountName']].lower()] = record[self.NAME_TO_INTERNAL['Description']]
                                 if self.__justNTLM is False:
                                     self.__decryptSupplementalInfo(record, None, keysOutputFile, clearTextOutputFile)
                         except Exception as e:
@@ -1019,7 +1032,8 @@ class NTDSHashes:
                 keysOutputFile.close()
 
             if clearTextOutputFile is not None:
-                clearTextOutputFile.close()
+                clearTextOutputFile.close()   
+        return map_description
 
 
 
