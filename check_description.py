@@ -14,6 +14,7 @@
 
 from os import path
 import json
+import re
 from datetime import datetime
 import argparse
 import logging
@@ -156,8 +157,10 @@ def hashes_desc(dic_csv):
     
     #For each user 
     for elem in dic_csv:
+        # remove some expression so we don't miss some password
+        sub_str = re.sub("(pass:)|(pass=)|(passe:)|(passe=)|(passwd=)|(passwd:)", " ", dic_csv[elem])
         #split the description in substring (separator is space)
-        sub_str = dic_csv[elem].split()
+        sub_str = sub_str.split()
         #retrieve the whole description too
         desc = dic_csv[elem]
         #convert into NT hash the whole description and put it at first element of the user entry in the new dico
@@ -183,6 +186,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help = True)
     parser.add_argument('-system', action='store', help='SYSTEM hive to parse. MANDATORY')
     parser.add_argument('-ntds', action='store', help='NTDS.DIT file to parse. MANDATORY')
+    parser.add_argument('-load-exist-files', action='store_true', help='If you want to re-run analysis without from *.json and output.ntds file. -json-hashes, -json-plain and -txt-ntds mandatory')
+    parser.add_argument('-json-hashes', action='store', help='NTDS.DIT file to parse. MANDATORY')
+    parser.add_argument('-json-plain', action='store', help='NTDS.DIT file to parse. MANDATORY')
+    parser.add_argument('-txt-ntds', action='store', help='NTDS.DIT file to parse. MANDATORY')
     parser.add_argument('-ts', action='store_true', help='Adds timestamp to every logging output during hashes extraction')
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON during hashes extraction')
     options = parser.parse_args()
