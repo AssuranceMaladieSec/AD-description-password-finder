@@ -76,7 +76,7 @@ Enabled (probably) user - The password for the user test-alice is in the descrip
 ```
 ## Use of impacket
 
-This tool uses a modify version of the [`secretdump`](https://github.com/SecureAuthCorp/impacket/blob/master/impacket/examples/secretsdump.py) code from the [Impacket](https://github.com/SecureAuthCorp/impacket) library to retrieve information from the ntds.
+This tool uses a modified version of the [`secretdump`](https://github.com/SecureAuthCorp/impacket/blob/master/impacket/examples/secretsdump.py) code from the [Impacket](https://github.com/SecureAuthCorp/impacket) library.
 
 Impacket is a tool from SECUREAUTH LABS. Copyright (C) 2022 SecureAuth Corporation. All rights reserved.
 
