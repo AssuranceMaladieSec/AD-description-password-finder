@@ -158,7 +158,7 @@ def hashes_desc(dic_csv):
     #For each user 
     for elem in dic_csv:
         # remove some expression so we don't miss some password
-        sub_str = re.sub("(pass:)|(pass=)|(passe:)|(passe=)|(passwd=)|(passwd:)|(pwd=)|(pwd:)|(mdp=)|(mdp:)", " ", dic_csv[elem])
+        sub_str = re.sub("(pass:)|(pass=)|(passe:)|(passe=)|(passwd=)|(passwd:)|(pwd=)|(pwd:)|(mdp=)|(mdp:)", " ", dic_csv[elem], flags=re.IGNORECASE)
         #split the description in substring (separator is space)
         sub_str = sub_str.split()
         #retrieve the whole description too
