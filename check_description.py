@@ -101,9 +101,10 @@ class DumpSecrets:
 date = datetime.date(datetime.now())
 filename = f"./results/{date}_{datetime.now().hour}h{datetime.now().minute}_results.txt"
     
-def search_pass(ntds, hashes, plain, filename, list_disabled):
+def search_pass(ntds, hashes, plain, filename, list_disabled, list_to_check):
     processed = len(hashes)
     found = 0
+    found_to_check = 0
     
     print("\nWe have %s user's descriptions to analyze" % processed)
     # for each entry from csv file
@@ -115,14 +116,21 @@ def search_pass(ntds, hashes, plain, filename, list_disabled):
                     # Get the index to retrieve the plain text
                     index = hashes[entry].index(ntds[entry])
                     if entry in list_disabled:
-                        f.write(f"Disabled user - password for the user {entry} is in the description: {plain[entry][index]}\n")
+                        f.write(f"CONFIRMED_LEAK - Disabled user - password for user {entry} found in description: {plain[entry][index]}\n")
                     else:
-                        f.write(f"Enabled (probably) user - The password for the user {entry} is in the description: {plain[entry][index]}\n")
+                        f.write(f"CONFIRMED_LEAK - Enabled (probably) user - password for user {entry} found in description: {plain[entry][index]}\n")
                     found += 1
+                else:
+                    if entry in list_to_check:
+                        if entry in list_disabled:
+                            f.write(f"SUSPECTED_LEAK - Disabled user - SUSPECTED password for user {entry} in the description: {plain[entry][0]}\n")
+                        else:
+                            f.write(f"SUSPECTED_LEAK - Enabled (probably) user - SUSPECTED password for user {entry} in the description: {plain[entry][0]}\n")
+                        found_to_check += 1
             except:
                 continue
                 
-    return found
+    return found, found_to_check
     
 def load_description(filename):
     dict_from_json = {}
@@ -154,13 +162,24 @@ def nt_hash(string):
 def hashes_desc(dic_csv):
     dict_hashes_desc = {}
     dict_plain_desc = {}
+    to_check = []
     
     #For each user 
     for elem in dic_csv:
-        # remove some expression so we don't miss some password
-        sub_str = re.sub("(pass:)|(pass=)|(passe:)|(passe=)|(passwd=)|(passwd:)|(pwd=)|(pwd:)|(mdp=)|(mdp:)", " ", dic_csv[elem], flags=re.IGNORECASE)
-        #split the description in substring (separator is space)
-        sub_str = sub_str.split()
+	
+	    # Search for password pattern
+        pass_string_exist = re.search("[^a-zA-Z0-9]?(?:pass|passe|passwd|password|mdp|pwd)\s?(?::|=)\s?(\S+)", dic_csv[elem], flags=re.IGNORECASE)
+        
+        # Split the description in substring (separator is space)
+        sub_str = dic_csv[elem].split()
+
+        # If password pattern matched
+        if pass_string_exist is not None:
+            # Extract probable password
+            sub_str.append(pass_string_exist.groups()[0])
+            # Add account in the list of potential leaks (aka something we missed like trailing ")" or something something)
+            to_check.append(elem)
+
         #retrieve the whole description too
         desc = dic_csv[elem]
         #convert into NT hash the whole description and put it at first element of the user entry in the new dico
@@ -174,7 +193,7 @@ def hashes_desc(dic_csv):
             dict_hashes_desc[elem].append(nt_hash(item))
             #same thing but plain text
             dict_plain_desc[elem].append(item)
-    return dict_hashes_desc, dict_plain_desc
+    return dict_hashes_desc, dict_plain_desc, to_check
   
 def write_dico_json(dico, filename):
     f = open(filename, "w")
@@ -213,7 +232,9 @@ if __name__ == '__main__':
             logging.error(e)
 
     print("\nCreating hash file in './output/description_hashes.json' and plain text file in './output/description_plain.json'")
-    dict_hashes, dict_plain = hashes_desc(description_ntds)
+    dict_hashes, dict_plain, list_to_check = hashes_desc(description_ntds)
+    print("yo ")
+    print(list_to_check)
     write_dico_json(dict_hashes, "./output/description_hashes.json")
     write_dico_json(dict_plain, "./output/description_plain.json")
     print("\nDone!")
@@ -240,11 +261,14 @@ if __name__ == '__main__':
     else:
         dict_ntds = load_ntds("./ntds/output.ntds")
     
-    pass_found = search_pass(dict_ntds, dict_hashes, dict_plain, filename, list_description_disabled)
+    pass_found, tocheck_found = search_pass(dict_ntds, dict_hashes, dict_plain, filename, list_description_disabled, list_to_check)
 
-    print("\nDone! We found %s password in the accounts description" % pass_found)
-    if (pass_found > 0):
+    print("\nDone!")
+    if ( (pass_found > 0) or (tocheck_found > 0) ):
+        print("\nWe found %s CONFIRMED password in the accounts description" % pass_found)
+        print("\n%s accounts are SUSPECTED of exposing their passwords and need to be verified by a HUMAN" % tocheck_found)
         print("\nYou can find the results in the file %s" % filename)
     else:
         print("\nNo plain text password found in accounts descriptions")
     print("\nThat's all folks!")
+    
