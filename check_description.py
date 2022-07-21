@@ -233,8 +233,6 @@ if __name__ == '__main__':
 
     print("\nCreating hash file in './output/description_hashes.json' and plain text file in './output/description_plain.json'")
     dict_hashes, dict_plain, list_to_check = hashes_desc(description_ntds)
-    print("yo ")
-    print(list_to_check)
     write_dico_json(dict_hashes, "./output/description_hashes.json")
     write_dico_json(dict_plain, "./output/description_plain.json")
     print("\nDone!")
