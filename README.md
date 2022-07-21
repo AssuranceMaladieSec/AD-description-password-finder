@@ -59,11 +59,15 @@ Loading ./output/description_plain.json
 
 Loading ./ntds/output.ntds
 
-We have 6 user's descriptions to analyze
+We have 9 user's descriptions to analyze
 
-Done! We found 2 password in the accounts description
+Done!
 
-You can find the results in the file ./results/2022-07-05_11h45_results.txt
+We found 4 CONFIRMED password in the accounts description
+
+2 accounts are SUSPECTED of exposing their passwords and need to be verified by a HUMAN
+
+You can find the results in the file ./results/2022-07-21_17h8_results.txt
 
 That's all folks!
 ```
@@ -71,8 +75,12 @@ That's all folks!
 ## File results example
 
 ```
-Disabled user - password for the user test-alice2 is in the description: Achanger6Achanger6!
-Enabled (probably) user - The password for the user test-alice is in the description: Achanger1Achanger2!
+CONFIRMED_LEAK - Disabled user - password for user adm-test-alice2 found in description: Achanger6Achanger6!
+CONFIRMED_LEAK - Enabled (probably) user - password for user adm-test-alice found in description: Achanger1Achanger2!
+SUSPECTED_LEAK - Enabled (probably) user - SUSPECTED password for user anakin in the description: here we go "pwd=test01!"
+SUSPECTED_LEAK - Enabled (probably) user - SUSPECTED password for user ahsoka in the description: The new one for test (password=test054!)
+CONFIRMED_LEAK - Enabled (probably) user - password for user mariatest02 found in description: test02!
+CONFIRMED_LEAK - Enabled (probably) user - password for user blanqui found in description: woof01!
 ```
 ## Use of impacket
 
